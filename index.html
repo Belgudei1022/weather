@@ -26,7 +26,13 @@
               <h1>Өнөөдөр</h1>
               <div class="location">
                 <img src="images\mdi_location.png" alt="" />
-                <h3 id="city">УлаанБаатар/Монгол</h3>
+                <div
+                  class="name"
+                  style="display: flex; flex-direction: row; gap: 2px">
+                  <h3 id="country"></h3>
+                  <h3>|</h3>
+                  <h3 id="city"></h3>
+                </div>
               </div>
             </div>
             <div class="mid">
@@ -36,8 +42,8 @@
                   <h3>°F</h3>
                   <h3>°C</h3>
                 </button>
-                <h1 id="temperature">10</h1>
-                <h3>2024 оны 11 сарын 18<span> | </span>Даваа гариг</h3>
+                <h1 id="temperature"></h1>
+                <h3 id="today"></h3>
               </div>
             </div>
             <div class="lower">
@@ -118,6 +124,11 @@
       </div>
     </section>
     <script>
+      const currentWeatherAPI =
+        "https://api.openweathermap.org/data/2.5/weather";
+      const APIKey = "8ed8a60cfddd132cb60ca67091caa5f3";
+      const weatherURL = "https://api.openweathermap.org/data/2.5/forecast";
+
       const getCurrentWeatherData = async (city) => {
         try {
           const response = await fetch(
@@ -133,12 +144,6 @@
         }
       };
 
-      const currentWeatherAPI =
-        "https://api.openweathermap.org/data/2.5/weather";
-      const APIKey = "8ed8a60cfddd132cb60ca67091caa5f3";
-      const weatherURL = "https://api.openweathermap.org/data/2.5/forecast";
-
-      // Fetch weather data for a given city
       const getWeatherData = async (city) => {
         try {
           const response = await fetch(
@@ -178,26 +183,36 @@
         const wind_speed = document.querySelector("#wind");
         const humidity = document.querySelector("#humidity");
         const pressure = document.querySelector("#pressure");
+        const name = document.querySelector("#city");
+        const country = document.querySelector("#country");
+        const today = document.querySelector("#today");
+        const date = new Date();
+
+        today.innerHTML = date;
+        country.innerHTML = `${data.sys.country}`;
+        name.innerHTML = `${data.name}`;
         wind_speed.innerHTML = ` ${data.wind.speed}`;
         humidity.innerHTML = ` ${data.main.humidity}`;
         pressure.innerHTML = `${data.main.pressure}`;
-        temperatureElement.innerHTML = ` ${data.main.temp}°C`;
+        temperatureElement.innerHTML = ` ${Math.round(data.main.temp)}°C`;
         console.log(data);
       };
 
       // Update the UI with the weather data
       const updateForecast = (data) => {
         const Block = document.querySelector("#block");
+
         Block.innerHTML = ``;
         data.map((el) => {
           Block.innerHTML += `<div class="card">
             <img src="images/Sun.png" alt="" />
             <div class="lower">
-              <h1 id="temperature1">${el.main.temp}</h1>
+              <h1 id="temperature1">${Math.round(el.main.temp)}</h1>
               <h3>${el.dt_txt}</h3>
               <h3>Даваа гариг</h3>
             </div>
           </div>  `;
+          console.log(data);
         });
         // const temperatureElement = document.querySelector("#temperature");
         // const temperatureElementFirst = document.querySelector("#temperature1");
@@ -262,4 +277,3 @@
     </script>
   </body>
 </html>
-a=12 func play(a)
