@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Daily Weather</title>
+  </head>
+  <body>
+    <section class="menu">
+      <nav>
+        <img src="images\Sun (1).png" alt="" />
+        <img src="images\Map Marker.png" alt="" />
+        <img src="images/Bullet List.png" alt="" />
+      </nav>
+    </section>
+    <section class="main">
+      <div class="content">
+        <div class="block block1">
+          <div class="search">
+            <img src="images\Search.png" alt="" />
+            <input id="search" type="text" placeholder="Search City" />
+          </div>
+          <div class="group">
+            <div class="title">
+              <h1>Өнөөдөр</h1>
+              <div class="location">
+                <img src="images\mdi_location.png" alt="" />
+                <h3 id="city">УлаанБаатар/Монгол</h3>
+              </div>
+            </div>
+            <div class="mid">
+              <img src="images\Sun.png" alt="" />
+              <div class="info">
+                <button>
+                  <h3>°F</h3>
+                  <h3>°C</h3>
+                </button>
+                <h1 id="temperature">10</h1>
+                <h3>2024 оны 11 сарын 18<span> | </span>Даваа гариг</h3>
+              </div>
+            </div>
+            <div class="lower">
+              <h2>Салхины хурд: <span id="wind"> </span>mph</h2>
+              <h2>Агаарын чийгшил: <span id="humidity"></span> %</h2>
+              <h2>Агаарын даралт: <span id="pressure"></span>in</h2>
+            </div>
+          </div>
+        </div>
+        <div class="block block2">
+          <img src="images\Group 46.png" alt="" />
+        </div>
+        <div class="block block3" id="block"></div>
+        <div class="block block4">
+          <div class="border">
+            <div class="card">
+              <h3>08:00</h3>
+              <img src="images\Sun.png" alt="" />
+              <h3>3°C</h3>
+            </div>
+            <div class="card">
+              <h3>10:00</h3>
+              <img src="images\Sun.png" alt="" />
+              <h3>5°C</h3>
+            </div>
+            <div class="card">
+              <h3>12:00</h3>
+              <img src="images\Sun Behind Small Cloud.png" alt="" />
+              <h3>8°C</h3>
+            </div>
+            <div class="card">
+              <h3>14:00</h3>
+              <img src="images\Sun.png" alt="" />
+              <h3>10°C</h3>
+            </div>
+            <div class="card">
+              <h3>16:00</h3>
+              <img src="images\Sun.png" alt="" />
+              <h3>10°C</h3>
+            </div>
+            <div class="card">
+              <h3>18:00</h3>
+              <img src="images\Sun Behind Small Cloud.png" alt="" />
+              <h3>9°C</h3>
+            </div>
+            <div class="card">
+              <h3>20:00</h3>
+              <img src="images\Cloud.png" alt="" />
+              <h3>5°C</h3>
+            </div>
+            <div class="card">
+              <h3>22:00</h3>
+              <img src="images\Crescent Moon.png" alt="" />
+              <h3>3°C</h3>
+            </div>
+            <div class="card">
+              <h3>00:00</h3>
+              <img src="images\Crescent Moon.png" alt="" />
+              <h3>0°C</h3>
+            </div>
+            <div class="card">
+              <h3>02:00</h3>
+              <img src="images\Crescent Moon.png" alt="" />
+              <h3>-2°C</h3>
+            </div>
+            <div class="card">
+              <h3>04:00</h3>
+              <img src="images\Crescent Moon.png" alt="" />
+              <h3>-3°C</h3>
+            </div>
+            <div class="card">
+              <h3>06:00</h3>
+              <img src="images\Sun.png" alt="" />
+              <h3>0°C</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <script>
+      const getCurrentWeatherData = async (city) => {
+        try {
+          const response = await fetch(
+            `${currentWeatherAPI}?q=${city}&appid=${APIKey}&units=metric`
+          );
+          if (!response.ok) {
+            throw new Error(`City not found: ${city}`);
+          }
+          const data = await response.json();
+          return data;
+        } catch (error) {
+          console.error("Error fetching weather data:", error.message);
+        }
+      };
+
+      const currentWeatherAPI =
+        "https://api.openweathermap.org/data/2.5/weather";
+      const APIKey = "8ed8a60cfddd132cb60ca67091caa5f3";
+      const weatherURL = "https://api.openweathermap.org/data/2.5/forecast";
+
+      // Fetch weather data for a given city
+      const getWeatherData = async (city) => {
+        try {
+          const response = await fetch(
+            `${weatherURL}?q=${city}&units=metric&appid=${APIKey}`
+          );
+          if (!response.ok) {
+            throw new Error(`City not found: ${city}`);
+          }
+          const data = await response.json();
+          const dailyForecasts = data.list.filter((forecast) =>
+            forecast.dt_txt.includes("12:00:00")
+          );
+          return dailyForecasts;
+        } catch (error) {
+          console.error("Error fetching weather data:", error.message);
+        }
+      };
+
+      // Event listener for the search input
+      const searchCityInput = document.querySelector("#search");
+      searchCityInput.addEventListener("keydown", async (e) => {
+        if (e.key === "Enter") {
+          // Trigger only when Enter is pressed
+          const city = e.target.value.trim();
+          if (city) {
+            const weatherData = await getWeatherData(city);
+            const currentData = await getCurrentWeatherData(city);
+            if (weatherData) {
+              updateForecast(weatherData);
+              updateCurrentDay(currentData);
+            }
+          }
+        }
+      });
+      const updateCurrentDay = (data) => {
+        const temperatureElement = document.querySelector("#temperature");
+        const wind_speed = document.querySelector("#wind");
+        const humidity = document.querySelector("#humidity");
+        const pressure = document.querySelector("#pressure");
+        wind_speed.innerHTML = ` ${data.wind.speed}`;
+        humidity.innerHTML = ` ${data.main.humidity}`;
+        pressure.innerHTML = `${data.main.pressure}`;
+        temperatureElement.innerHTML = ` ${data.main.temp}°C`;
+        console.log(data);
+      };
+
+      // Update the UI with the weather data
+      const updateForecast = (data) => {
+        const Block = document.querySelector("#block");
+        Block.innerHTML = ``;
+        data.map((el) => {
+          Block.innerHTML += `<div class="card">
+            <img src="images/Sun.png" alt="" />
+            <div class="lower">
+              <h1 id="temperature1">${el.main.temp}</h1>
+              <h3>${el.dt_txt}</h3>
+              <h3>Даваа гариг</h3>
+            </div>
+          </div>  `;
+        });
+        // const temperatureElement = document.querySelector("#temperature");
+        // const temperatureElementFirst = document.querySelector("#temperature1");
+        // const temperatureElementSecond = document.querySelector("#temprature2");
+        // const temperatureElementThird = document.querySelector("#temperature3");
+        // const temperatureElementFourth =
+        //   document.querySelector("#temperature4");
+        // const temperatureElementFifth = document.querySelector("#temperature5");
+        // const pressure = document.querySelector("#pressure");
+        // const humidity = document.querySelector("#humidity");
+
+        // const currentDayTemp = data.list[0].main.temp;
+        // const firstDayTemp = data.list[1].main.temp;
+        // const secondDayTemp = data.list[2].main.temp;
+        // const thirdDayTemp = data.list[3].main.temp;
+        // const fourthDayTemp = data.list[4].main.temp;
+        // const fifthDayTemp = data.list[5].main.temp;
+        // const currentPressure = data.list[0].main.pressure;
+        // const currentHumidity = data.list[0].main.humidity;
+
+        // temperatureElement.innerHTML = `${currentDayTemp}°C`;
+        // temperatureElementFirst.innerHTML = `${firstDayTemp}°C`;
+        // temperatureElementSecond.innerHTML = `${secondDayTemp}°C`;
+        // temperatureElementThird.innerHTML = `${thirdDayTemp}°C`;
+        // temperatureElementFourth.innerHTML = `${fourthDayTemp}°C`;
+        // temperatureElementFifth.innerHTML = `${fifthDayTemp}°C`;
+        // pressure.innerHTML = `${currentPressure}`;
+        // humidity.innerHTML = `${currentHumidity}`;
+      };
+      // const APIKey = "8ed8a60cfddd132cb60ca67091caa5f3";
+      // const WaetherURL =
+      //   "https://api.openweathermap.org/data/2.5/forecast/daily";
+
+      // const getdata = async (city) => {
+      //   const response = await fetch(
+      //     `${WaetherURL}?q=${city}&units=metric&cnt=7&appid=${APIKey}`
+      //   );
+      //   const data = await response.json();
+      //   console.log(data);
+
+      //   return data;
+      // };
+      // const searchCityInput = document.querySelector("#search");
+      // searchCityInput.addEventListener("keydown", async (e) => {
+      //   if (e.key === "Enter") {
+      //     const city = e.target.value.trim();
+      //     if (city) {
+      //       const weatherData = await getWeatherData(city);
+      //       if (weatherData) {
+      //         updateCurrentDay(weatherData);
+      //       }
+      //     }
+      //   }
+      // });
+
+      // const updateCurrentDay = (data) => {
+      //   const temperature = document.querySelector("#temperature");
+
+      //   temperatureElement.innerHTML = ` ${data.main.temp}°C`;
+      //   console.log(data);
+      // };
+    </script>
+  </body>
+</html>
+a=12 func play(a)
