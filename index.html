@@ -7,13 +7,6 @@
     <title>Daily Weather</title>
   </head>
   <body>
-    <section class="menu">
-      <nav>
-        <img src="images\Sun (1).png" alt="" />
-        <img src="images\Map Marker.png" alt="" />
-        <img src="images/Bullet List.png" alt="" />
-      </nav>
-    </section>
     <section class="main">
       <div class="content">
         <div class="block block1">
@@ -36,14 +29,10 @@
               </div>
             </div>
             <div class="mid">
-              <div class="image">
+              <div class="image" id="">
                 <img src="" alt="" id="todayimage" />
               </div>
               <div class="info">
-                <button>
-                  <h3>°F</h3>
-                  <h3>°C</h3>
-                </button>
                 <h1 id="temperature"></h1>
                 <h3 id="today"></h3>
               </div>
@@ -55,16 +44,21 @@
             </div>
           </div>
         </div>
-        <div class="block block2">
-          <img src="images\Group 46.png" alt="" />
+        <div class="flex">
+          <div class="block block2">
+            <img src="images\Group 46.png" alt="" />
+          </div>
+          <div class="block block3">
+            <div class="border" id="hours"></div>
+          </div>
         </div>
-        <div class="block block3" id="block"></div>
-        <div class="block block4">
-          <div class="border" id="hours"></div>
-        </div>
+        <div class="block block4" id="block"></div>
       </div>
     </section>
+
     <script>
+      let check = true;
+
       const currentWeatherAPI =
         "https://api.openweathermap.org/data/2.5/weather";
       const APIKey = "8ed8a60cfddd132cb60ca67091caa5f3";
@@ -84,10 +78,11 @@
           console.error("Error fetching weather data:", error.message);
         }
       };
+
       function getFormattedDate() {
-        const now = new Date(Date.now()); // Create a Date object from the timestamp
+        const now = new Date(Date.now());
         const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+        const month = String(now.getMonth() + 1).padStart(2, "0");
         const day = String(now.getDate()).padStart(2, "0");
         return `${year}-${month}-${day}`;
       }
@@ -110,6 +105,7 @@
           console.error("Error fetching weather data:", error.message);
         }
       };
+
       const getHourData = async (city) => {
         try {
           const response = await fetch(
@@ -130,24 +126,35 @@
         }
       };
 
+      async function search(e) {
+        const city = e.target.value.trim();
+        if (city) {
+          const weatherData = await getWeatherData(city);
+          const currentData = await getCurrentWeatherData(city);
+          const hourData = await getHourData(city);
+          if (weatherData) {
+            updateForecast(weatherData);
+            updateCurrentDay(currentData);
+            updateHourcast(hourData);
+          }
+        }
+      }
+
       // Event listener for the search input
       const searchCityInput = document.querySelector("#search");
       searchCityInput.addEventListener("keydown", async (e) => {
         if (e.key === "Enter") {
           // Trigger only when Enter is pressed
-          const city = e.target.value.trim();
-          if (city) {
-            const weatherData = await getWeatherData(city);
-            const currentData = await getCurrentWeatherData(city);
-            const hourData = await getHourData(city);
-            if (weatherData) {
-              updateForecast(weatherData);
-              updateCurrentDay(currentData);
-              updateHourcast(hourData);
-            }
-          }
+          await search(e); // Call the search function when Enter is pressed
+          check = false;
+        } else if (check == true) {
+          // Default behavior if `check` is true
+          const weatherData = await getWeatherData("Ulaanbaatar");
+          const currentData = await getCurrentWeatherData("Ulaanbaatar");
+          const hourData = await getHourData("Ulaanbaatar");
         }
       });
+
       const updateCurrentDay = (data) => {
         const temperatureElement = document.querySelector("#temperature");
         const wind_speed = document.querySelector("#wind");
@@ -156,8 +163,9 @@
         const name = document.querySelector("#city");
         const country = document.querySelector("#country");
         const today = document.querySelector("#today");
-        const date = new Date();
+        const todayimage = document.querySelector("#todayimage");
 
+        todayimage.src = `https://openweathermap.org/img/wn/${data.weather[0].icon}.png`;
         today.innerHTML = getFormattedDate();
         country.innerHTML = `${data.sys.country}`;
         name.innerHTML = `${data.name}`;
@@ -165,103 +173,53 @@
         humidity.innerHTML = ` ${data.main.humidity}`;
         pressure.innerHTML = `${data.main.pressure}`;
         temperatureElement.innerHTML = ` ${Math.round(data.main.temp)}°C`;
-        console.log(data);
       };
 
-      // Update the UI with the weather data
       const updateHourcast = (data) => {
         const timebytime = document.querySelector("#hours");
+        timebytime.innerHTML = ""; // Clear the container
 
-        timebytime.innerHTML = ``;
-        data.map((el) => {
-          timebytime.innerHTML +=
-            `<div class="card">
-              <h3>${el.dt_txt}</h3>
-              ` +
-            `<img src=https://openweathermap.org/img/wn/${el.weather[0].icon}.png alt="" />` +
-            `
-              <h3>3°C</h3>
-            </div>`;
+        data.forEach((el) => {
+          const hour = el.dt_txt.substring(11, 16); // Extract the hour (e.g., "12:00")
+          timebytime.innerHTML += `
+      <div class="card">
+        <h3>${hour}</h3>
+        <img src="https://openweathermap.org/img/wn/${
+          el.weather[0].icon
+        }.png" alt="Weather icon" />
+        <h3>${Math.round(el.main.temp)}°C</h3>
+      </div>`;
         });
       };
+
       const updateForecast = (data) => {
         const Block = document.querySelector("#block");
 
         Block.innerHTML = ``;
         data.map((el) => {
-          Block.innerHTML +=
-            `<div class="card">
-            ` +
-            `<img src=https://openweathermap.org/img/wn/${el.weather[0].icon}.png alt="" />` +
-            `
-            <div class="lower">
-              <h1 id="temperature1">${Math.round(el.main.temp)} °C </h1>
-              <h3>${el.dt_txt}</h3>
-              <h3>Даваа гариг</h3>
-            </div>
-          </div>  `;
-          console.log(data);
+          const date = el.dt_txt.substring(0, 11);
+          Block.innerHTML += `
+      <div class="card">
+        <img src=https://openweathermap.org/img/wn/${
+          el.weather[0].icon
+        }.png alt="" />
+        <div class="lower">
+          <h1 id="temperature1">${Math.round(el.main.temp)} °C</h1>
+          <h3 class="day">${date}</h3>
+          <h3>
+            ${new Date(el.dt_txt).toLocaleDateString("mn-MN", {
+              weekday: "long",
+            })}
+          </h3>
+        </div>
+      </div>`;
         });
-        // const temperatureElement = document.querySelector("#temperature");
-        // const temperatureElementFirst = document.querySelector("#temperature1");
-        // const temperatureElementSecond = document.querySelector("#temprature2");
-        // const temperatureElementThird = document.querySelector("#temperature3");
-        // const temperatureElementFourth =
-        //   document.querySelector("#temperature4");
-        // const temperatureElementFifth = document.querySelector("#temperature5");
-        // const pressure = document.querySelector("#pressure");
-        // const humidity = document.querySelector("#humidity");
-
-        // const currentDayTemp = data.list[0].main.temp;
-        // const firstDayTemp = data.list[1].main.temp;
-        // const secondDayTemp = data.list[2].main.temp;
-        // const thirdDayTemp = data.list[3].main.temp;
-        // const fourthDayTemp = data.list[4].main.temp;
-        // const fifthDayTemp = data.list[5].main.temp;
-        // const currentPressure = data.list[0].main.pressure;
-        // const currentHumidity = data.list[0].main.humidity;
-
-        // temperatureElement.innerHTML = `${currentDayTemp}°C`;
-        // temperatureElementFirst.innerHTML = `${firstDayTemp}°C`;
-        // temperatureElementSecond.innerHTML = `${secondDayTemp}°C`;
-        // temperatureElementThird.innerHTML = `${thirdDayTemp}°C`;
-        // temperatureElementFourth.innerHTML = `${fourthDayTemp}°C`;
-        // temperatureElementFifth.innerHTML = `${fifthDayTemp}°C`;
-        // pressure.innerHTML = `${currentPressure}`;
-        // humidity.innerHTML = `${currentHumidity}`;
       };
-      // const APIKey = "8ed8a60cfddd132cb60ca67091caa5f3";
-      // const WaetherURL =
-      //   "https://api.openweathermap.org/data/2.5/forecast/daily";
 
-      // const getdata = async (city) => {
-      //   const response = await fetch(
-      //     `${WaetherURL}?q=${city}&units=metric&cnt=7&appid=${APIKey}`
-      //   );
-      //   const data = await response.json();
-      //   console.log(data);
-
-      //   return data;
-      // };
-      // const searchCityInput = document.querySelector("#search");
-      // searchCityInput.addEventListener("keydown", async (e) => {
-      //   if (e.key === "Enter") {
-      //     const city = e.target.value.trim();
-      //     if (city) {
-      //       const weatherData = await getWeatherData(city);
-      //       if (weatherData) {
-      //         updateCurrentDay(weatherData);
-      //       }
-      //     }
-      //   }
-      // });
-
-      // const updateCurrentDay = (data) => {
-      //   const temperature = document.querySelector("#temperature");
-
-      //   temperatureElement.innerHTML = ` ${data.main.temp}°C`;
-      //   console.log(data);
-      // };
+      window.addEventListener("load", () => {
+        searchCityInput.value = "Ulaanbaatar"; // Optional: Set a default city
+        search({ target: searchCityInput });
+      });
     </script>
   </body>
 </html>
